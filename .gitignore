@@ -2,3 +2,4 @@ venv/
 *.pyc
 app.db
 logs/
+commands.txt
