@@ -14,7 +14,7 @@
           </div>
           <div class="panel-footer">
             {% if user.last_seen %} 
-            Last seen: {{ user.last_seen }}
+            Last seen: {{ moment(user.last_seen).fromNow() }}
             {% endif %}
           </div>
         </div>
