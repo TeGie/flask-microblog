@@ -1,5 +1,6 @@
 import os
 
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -18,5 +19,6 @@ class Config(object):
     ADMINS = os.environ.get('ADMINS')
 
     POSTS_PER_PAGE = 3
-
+    
+    TEST_USER = os.environ.get('TEST_USER')
 

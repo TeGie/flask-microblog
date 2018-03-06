@@ -1,6 +1,6 @@
 venv3/
 *.pyc
-app.db
+*.db
 logs/
 commands.txt
 geckodriver.log

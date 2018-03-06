@@ -1,12 +1,26 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $('textarea').on('input', updateCount);
+    function updateCount() {    
+      $('#characters').text(
+        'Characters left: ' + (140 - $(this).val().length));
+    }
+  </script>
+{% endblock %}
+
 {% block app_content %}
   <h1>Hello, {{ current_user.username }}</h1>
   {% if form %}
   <div class="row">
     <div class="col-md-4">
       {{ wtf.quick_form(form) }}
+      <h6 class="pull-right">
+        <span id="characters"></span>
+      </h6>
     </div>
   </div> 
   {% endif %}
