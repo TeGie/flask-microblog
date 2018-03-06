@@ -3,3 +3,4 @@ venv3/
 app.db
 logs/
 commands.txt
+geckodriver.log
