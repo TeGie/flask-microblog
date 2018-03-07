@@ -9,9 +9,19 @@
       <a href="{{ url_for('user', username=post.author.username) }}">
         {{ post.author.username }}
       </a>
-      says {{ moment(post.timestamp).fromNow() }}:
+      says {{ moment(post.timestamp).fromNow(refresh=True) }}:
     </h5>
     {{ post.body }}
+    {% if user == current_user %}
+    <h6>
+      <a href="{{ url_for('post', id=post.id) }}">Edit</a>
+      <a href="{{ url_for('delete_post', id=post.id) }}">Delete</a>
+    </h6>
+    {% elif post.versions.count() > 0 %}
+    <h6>
+      <a href="{{ url_for('post', id=post.id) }}">History</a>
+    </h6>
+    {% endif %}
   </div>
 </div>
 

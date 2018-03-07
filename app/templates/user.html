@@ -16,7 +16,8 @@
           <small>
             <cite>
               {% if user.last_seen %} 
-              Last seen: {{ moment(user.last_seen).fromNow() }}
+              Last seen: {{ moment(user.last_seen).fromNow(
+                refresh=True) }}
               {% endif %}
             </cite>
           </small>

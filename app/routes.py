@@ -7,12 +7,12 @@ from werkzeug.urls import url_parse
 from app import app, db
 from app.email import send_password_reset_email
 from app.forms import EditProfileForm, LoginForm, PostForm, RegistrationForm, ResetPasswordForm, ResetPasswordRequestForm
-from app.models import User, Post
+from app.models import User, Post, PostVersion
 
 
 def pagination(endpoint, request, post_query, user=None):
-    username = user.username if user is not None else None  
-    page = request.args.get('page', 1, type=int)  
+    username = user.username if user is not None else None
+    page = request.args.get('page', 1, type=int)
     posts = post_query.order_by(Post.timestamp.desc()).paginate(
             page, app.config['POSTS_PER_PAGE'], False)
     next_url = url_for(
@@ -38,7 +38,7 @@ def index():
     post_query = current_user.followed_posts()
     next_url, prev_url, posts = pagination(
         'index', request, post_query)
-    return render_template('index.html', title='Home', 
+    return render_template('index.html', title='Home',
                             form=form, posts=posts.items,
                             next_url=next_url, prev_url=prev_url)
 
@@ -49,8 +49,8 @@ def explore():
     post_query = Post.query
     next_url, prev_url, posts = pagination(
         'explore', request, post_query)
-    return render_template('index.html', title='Explore', 
-                            posts=posts.items, next_url=next_url, 
+    return render_template('index.html', title='Explore',
+                            posts=posts.items, next_url=next_url,
                             prev_url=prev_url)
 
 
@@ -71,8 +71,8 @@ def login():
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index')
         return redirect(next_page)
-    return render_template('login.html', 
-                            title='Sign In', 
+    return render_template('login.html',
+                            title='Sign In',
                             form=form)
 
 
@@ -88,18 +88,18 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, 
+        user = User(username=form.username.data,
                     email=form.email.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
         flash('You are registered user')
         return redirect(url_for('login'))
-    return render_template('register.html', 
-                            title='Register', 
+    return render_template('register.html',
+                            title='Register',
                             form=form)
 
-           
+
 @app.route('/user/<username>')
 @login_required
 def user(username):
@@ -198,5 +198,42 @@ def reset_password(token):
         flash('Your password has been reset')
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)
+
+
+@app.route('/delete_post/<id>')
+@login_required
+def delete_post(id):
+        post = Post.query.filter_by(
+            user_id=current_user.id, id=int(id)).first_or_404()
+        db.session.delete(post)
+        db.session.commit()
+        return redirect(url_for(
+            'user', username=current_user.username))
+
+
+@app.route('/post/<id>', methods=['GET', 'POST'])
+@login_required
+def post(id):
+    post = Post.query.get_or_404(int(id))
+    if post.author == current_user:
+        form = PostForm()
+        title = 'Edit Post'
+        if form.validate_on_submit():
+            edited_post = PostVersion(body=post.body, original=post)
+            db.session.add(edited_post)
+            post.body = form.post.data
+            db.session.commit()
+            return redirect(url_for(
+                'user', username=current_user.username))
+        elif request.method == 'GET':
+            form.post.data = post.body
+    else:
+        form = None
+        title = 'History'
+    return render_template(
+            'post_history.html',
+            title=title,
+            form=form,
+            post=post)
 
 

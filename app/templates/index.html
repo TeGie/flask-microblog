@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
 
 {% block scripts %}
   {{ super() }}
@@ -15,14 +14,7 @@
 {% block app_content %}
   <h1>Hello, {{ current_user.username }}</h1>
   {% if form %}
-  <div class="row">
-    <div class="col-md-4">
-      {{ wtf.quick_form(form) }}
-      <h6 class="pull-right">
-        <span id="characters"></span>
-      </h6>
-    </div>
-  </div> 
+    {% include "_post_form.html" %}
   {% endif %}
   
   {% for post in posts %}
