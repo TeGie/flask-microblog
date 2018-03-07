@@ -112,7 +112,7 @@ class PostVersion(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     
     def __repr__(self):
-        return f('<PostVersion {self.body}>')
+        return f'<PostVersion {self.body}>'
         
 
 @login.user_loader
