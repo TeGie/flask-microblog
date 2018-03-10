@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import request, render_template, flash, redirect, url_for
+from flask import jsonify, request, render_template, flash, redirect, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.urls import url_parse
 
@@ -203,37 +203,38 @@ def reset_password(token):
 @app.route('/delete_post/<id>')
 @login_required
 def delete_post(id):
-        post = Post.query.filter_by(
-            user_id=current_user.id, id=int(id)).first_or_404()
-        db.session.delete(post)
-        db.session.commit()
-        return redirect(url_for(
-            'user', username=current_user.username))
+    post = Post.query.filter_by(
+        user_id=current_user.id, id=int(id)).first_or_404()
+    db.session.delete(post)
+    db.session.commit()
+    return redirect(url_for(
+        'user', username=current_user.username))
 
 
 @app.route('/post/<id>', methods=['GET', 'POST'])
 @login_required
-def post(id):
-    post = Post.query.get_or_404(int(id))
-    if post.author == current_user:
-        form = PostForm()
-        title = 'Edit Post'
-        if form.validate_on_submit():
-            edited_post = PostVersion(body=post.body, original=post)
-            db.session.add(edited_post)
-            post.body = form.post.data
-            db.session.commit()
-            return redirect(url_for(
-                'user', username=current_user.username))
-        elif request.method == 'GET':
-            form.post.data = post.body
-    else:
-        form = None
-        title = 'History'
-    return render_template(
-            'post_history.html',
-            title=title,
-            form=form,
-            post=post)
+def edit_post(id):
+    post = Post.query.filter_by(
+        user_id=current_user.id, id=int(id)).first_or_404()
+    form = PostForm()
+    if form.validate_on_submit():
+        edited_post = PostVersion(body=post.body, original=post)
+        db.session.add(edited_post)
+        post.body = form.post.data
+        db.session.commit()
+        return redirect(url_for(
+            'user', username=current_user.username))
+    elif request.method == 'GET':
+        form.post.data = post.body
+    return render_template('post_edit.html', title='Edit Post',
+                            form=form, post=post)
+
+
+@app.route('/history/<id>')
+@login_required
+def history(id):
+    versions = PostVersion.query.filter_by(
+        post_id=int(id)).order_by(PostVersion.timestamp.desc())
+    return jsonify(versions=[v.serialize() for v in versions])
 
 

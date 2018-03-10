@@ -114,6 +114,12 @@ class PostVersion(db.Model):
     def __repr__(self):
         return f'<PostVersion {self.body}>'
         
+    def serialize(self):
+        return {
+            'body': self.body,
+            'timestamp': self.timestamp
+        }
+
 
 @login.user_loader
 def load_user(id):

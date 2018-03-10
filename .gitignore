@@ -2,5 +2,5 @@ venv3/
 *.pyc
 *.db
 logs/
-commands.txt
+snippets.txt
 geckodriver.log
