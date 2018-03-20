@@ -1,18 +1,27 @@
 import unittest
 from datetime import datetime, timedelta
 
-from app import app, db
-from app.models import User, Post
+from app import create_app, db
+from app.models import User, Post, PostVersion
+from config import Config
+
+
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite://'
 
 
 class UserModelCase(unittest.TestCase):
     def setUp(self):
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+        self.app = create_app(TestConfig)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
         db.create_all()
         
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+        self.app_context.pop()
         
     def test_password_hashing(self):
         u = User(username='nika')
@@ -84,6 +93,31 @@ class UserModelCase(unittest.TestCase):
         self.assertEqual(f2, [p2, p3])
         self.assertEqual(f3, [p2, p3])
         self.assertEqual(f4, [p4])
-             
-#if __name__ == '__main__':
- #   unittest.main(verbosity=2)
+        
+    def test_post_history(self):
+        u = User(username='tomek', email='tomek@expl.com')
+        db.session.add(u)
+
+        p = Post(body='from tomek', author=u)
+        db.session.add(p)
+        
+        now = datetime.utcnow()
+        
+        pv = PostVersion(
+            body='from tomek edited', 
+            timestamp=now,
+            original=p)
+        db.session.add(pv)
+        
+        db.session.commit()
+        
+        version = PostVersion.query.filter_by(original=p).first()
+        self.assertEqual(version.body, 'from tomek edited')
+        self.assertEqual(version.original.body, 'from tomek')
+        self.assertEqual(version.original.author, u)
+        self.assertDictEqual(
+            version.serialize(),
+            {'body': 'from tomek edited', 'timestamp': now})
+            
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

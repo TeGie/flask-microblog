@@ -4,3 +4,4 @@ venv3/
 logs/
 snippets.txt
 geckodriver.log
+.env

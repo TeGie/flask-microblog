@@ -1,14 +1,23 @@
+import unittest
+
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
-from app import app, db
+from app import create_app, db
+from config import Config
+
+
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
 
 
 class NewVisitorTest(LiveServerTestCase):
 
-    def create_app(self):
-        return app
     
+    def create_app(self):
+        return create_app(TestConfig)
+    '''
     def setUp(self):
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
         db.create_all()
@@ -18,6 +27,19 @@ class NewVisitorTest(LiveServerTestCase):
         self.browser.quit()
         db.session.remove()
         db.drop_all()
+        '''
+    def setUp(self):
+        self.app = self.create_app()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
+        self.browser = webdriver.Firefox()
+        
+    def tearDown(self):
+        self.browser.quit()
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
         
     def fill_form(self, **kwargs):
         for key, value in kwargs.items():
@@ -79,7 +101,7 @@ class NewVisitorTest(LiveServerTestCase):
         # the login form appear        
         self.fill_form(
             username='Eve', 
-            email=app.config.get('TEST_USER') or 'eve@expl.com',
+            email='eve@expl.com',
             password='pass',
             password2='pass')
         self.browser.find_element_by_id('submit').click()        
@@ -94,5 +116,8 @@ class NewVisitorTest(LiveServerTestCase):
         self.browser.find_element_by_id('submit').click()
         
         self.assertIn('Home', self.browser.title)
-        
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
+
 
